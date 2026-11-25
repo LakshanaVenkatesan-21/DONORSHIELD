@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Security Error – DonorShield{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-md-6">
+    <div class="card border-danger shadow">
+      <div class="card-header bg-danger text-white fw-semibold">
+        <i class="bi bi-shield-x me-2"></i>Request Validation Failed
+      </div>
+      <div class="card-body text-center py-4">
+        <p class="mb-3">Your form submission could not be validated. This can happen if:</p>
+        <ul class="text-start text-muted small mb-4">
+          <li>The page was open for too long before submitting</li>
+          <li>You navigated back and resubmitted an old form</li>
+          <li>A browser extension modified the form</li>
+        </ul>
+        <a href="{{ request.referrer or url_for('index') }}" class="btn btn-danger">
+          <i class="bi bi-arrow-left me-1"></i>Go Back and Try Again
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

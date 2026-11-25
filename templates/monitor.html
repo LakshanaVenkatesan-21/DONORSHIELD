@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}Network Monitor – DonorShield{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h4 class="mb-0"><i class="bi bi-activity me-2"></i>Network Monitor
+    <span class="badge bg-danger ms-2 fs-6">Admin Only</span>
+  </h4>
+  {% if new_count > 0 %}
+  <span class="badge bg-warning text-dark fs-6">{{ new_count }} unreviewed</span>
+  {% endif %}
+</div>
+
+<div class="alert alert-secondary py-2 small mb-3">
+  <i class="bi bi-info-circle me-1"></i>
+  Alerts are generated from <strong>offline PCAP analysis</strong> only — not live monitoring.
+  <span class="badge bg-primary ms-1">Scapy</span> built-in rules &nbsp;|
+  <span class="badge bg-warning text-dark ms-1">Snort</span> Snort 2.9.20 rules.
+  Use <code>flask analyze-pcap</code> (Scapy) or <code>flask snort-analyze</code> (Snort) with <code>--save</code>,
+  or upload via the <a href="{{ url_for('monitor_upload') }}">Upload PCAP</a> page.
+</div>
+
+<!-- Severity summary cards -->
+<div class="row g-2 mb-3">
+  {% for row in summary %}
+  <div class="col-auto">
+    <span class="badge fs-6
+      {% if row['severity'] == 'high' %}bg-danger
+      {% elif row['severity'] == 'medium' %}bg-warning text-dark
+      {% else %}bg-secondary{% endif %}">
+      {{ row['severity'] | capitalize }}: {{ row['cnt'] }}
+    </span>
+  </div>
+  {% endfor %}
+  {% if not summary %}
+  <div class="col"><span class="text-muted small">No alerts recorded yet.</span></div>
+  {% endif %}
+</div>
+
+<!-- Filters -->
+<form method="get" class="card shadow-sm mb-3">
+  <div class="card-body py-2">
+    <div class="row g-2 align-items-end">
+      <div class="col-sm-3">
+        <select name="severity" class="form-select form-select-sm">
+          <option value="">All Severities</option>
+          <option value="high"   {% if q_severity=='high'   %}selected{% endif %}>High</option>
+          <option value="medium" {% if q_severity=='medium' %}selected{% endif %}>Medium</option>
+          <option value="low"    {% if q_severity=='low'    %}selected{% endif %}>Low</option>
+        </select>
+      </div>
+      <div class="col-sm-3">
+        <select name="status" class="form-select form-select-sm">
+          <option value="">All Statuses</option>
+          <option value="new"      {% if q_status=='new'      %}selected{% endif %}>Unreviewed</option>
+          <option value="reviewed" {% if q_status=='reviewed' %}selected{% endif %}>Done</option>
+        </select>
+      </div>
+      <div class="col-sm-3">
+        <select name="rule" class="form-select form-select-sm">
+          <option value="">All Rules</option>
+          <option value="RULE_SYN_SCAN"      {% if q_rule=='RULE_SYN_SCAN'      %}selected{% endif %}>Port Scan</option>
+          <option value="RULE_HIGH_RATE"     {% if q_rule=='RULE_HIGH_RATE'     %}selected{% endif %}>Flood / DoS</option>
+          <option value="RULE_REPEATED_CONN" {% if q_rule=='RULE_REPEATED_CONN' %}selected{% endif %}>Brute Force</option>
+        </select>
+      </div>
+      <div class="col-sm-2">
+        <select name="source" class="form-select form-select-sm">
+          <option value="">All Sources</option>
+          <option value="scapy" {% if q_source=='scapy' %}selected{% endif %}>Scapy</option>
+          <option value="snort" {% if q_source=='snort' %}selected{% endif %}>Snort</option>
+        </select>
+      </div>
+      <div class="col-sm-2 d-flex gap-1">
+        <button type="submit" class="btn btn-sm btn-danger w-100">Filter</button>
+        <a href="{{ url_for('monitor') }}" class="btn btn-sm btn-outline-secondary">✕</a>
+      </div>
+    </div>
+  </div>
+</form>
+
+<!-- Alerts table -->
+<div class="card shadow-sm mb-3">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>#</th><th>Detected</th><th>Engine</th><th>Rule</th><th>Severity</th>
+            <th>Source IP</th><th>Dest IP</th><th>Port</th>
+            <th>Reason</th><th>File</th><th>Status</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="alerts-tbody">
+          {% for a in alerts %}
+          <tr class="{% if a['status']=='new' %}table-warning{% endif %}">
+            <td class="text-muted small">{{ a['id'] }}</td>
+            <td class="small text-muted">{{ a['detected_at'][:19] }}</td>
+            <td>
+              {% if a['source'] == 'snort' %}
+              <span class="badge bg-warning text-dark small">Snort</span>
+              {% else %}
+              <span class="badge bg-primary small">Scapy</span>
+              {% endif %}
+            </td>
+            <td><span class="badge bg-dark small">{{ a['rule_id'] }}</span></td>
+            <td>
+              <span class="badge
+                {% if a['severity']=='high' %}bg-danger
+                {% elif a['severity']=='medium' %}bg-warning text-dark
+                {% else %}bg-secondary{% endif %}">
+                {{ a['severity'] }}
+              </span>
+            </td>
+            <td class="small font-monospace">{{ a['src_ip'] or '—' }}</td>
+            <td class="small font-monospace">{{ a['dst_ip'] or '—' }}</td>
+            <td class="small">{{ a['dst_port'] or '—' }}</td>
+            <td class="small">{{ a['reason'] }}</td>
+            <td class="small text-muted">{{ a['source_file'] or '—' }}</td>
+            <td>
+              <span class="badge {% if a['status']=='new' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                {{ a['status'] }}
+              </span>
+            </td>
+            <td>
+              {% if a['status'] == 'new' %}
+              <form method="post"
+                    action="{{ url_for('monitor_review', alert_id=a['id']) }}"
+                    style="display:inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <button type="submit" class="btn btn-xs btn-outline-success btn-sm py-0 px-2">
+                  Review
+                </button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="12" class="text-center text-muted py-4">
+              No alerts match the current filters.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody><!-- end-alerts-tbody -->
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<nav>
+  <ul class="pagination pagination-sm justify-content-center flex-wrap">
+    {% set args = {'severity': q_severity, 'status': q_status, 'rule': q_rule} %}
+    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('monitor', page=page-1, **args) }}">‹</a>
+    </li>
+    {% for p in range([1, page-3]|max, [total_pages+1, page+4]|min) %}
+    <li class="page-item {% if p == page %}active{% endif %}">
+      <a class="page-link" href="{{ url_for('monitor', page=p, **args) }}">{{ p }}</a>
+    </li>
+    {% endfor %}
+    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('monitor', page=page+1, **args) }}">›</a>
+    </li>
+  </ul>
+</nav>
+{% endif %}
+
+<p class="text-muted small text-end">{{ total }} alert{{ 's' if total != 1 }} total</p>
+{% endblock %}

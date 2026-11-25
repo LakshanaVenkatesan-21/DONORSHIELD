@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Edit Donor #{{ donor['id'] }} – DonorShield{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="mb-3">
+      <a href="{{ url_for('donor_detail', donor_id=donor['id']) }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to Donor
+      </a>
+    </div>
+    <div class="card shadow">
+      <div class="card-header fw-semibold">
+        <i class="bi bi-pencil me-2"></i>Edit Donor #{{ donor['id'] }}
+      </div>
+      <div class="card-body p-4">
+        <form method="POST" action="{{ url_for('edit_donor', donor_id=donor['id']) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="full_name" class="form-control" required
+                   maxlength="120" value="{{ donor['full_name'] or '' }}" />
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col">
+              <label class="form-label">Blood Group</label>
+              <select name="blood_group" class="form-select" required>
+                {% for bg in ["A+","A-","B+","B-","AB+","AB-","O+","O-"] %}
+                <option {% if bg == donor['blood_group'] %}selected{% endif %}>{{ bg }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col">
+              <label class="form-label">Donation Type</label>
+              <select name="donation_type" class="form-select" id="donationType" required>
+                <option value="blood" {% if donor['donation_type'] == 'blood' %}selected{% endif %}>Blood</option>
+                <option value="organ" {% if donor['donation_type'] == 'organ' %}selected{% endif %}>Organ</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-3" id="organRow"
+               style="display:{% if donor['donation_type'] == 'organ' %}block{% else %}none{% endif %}">
+            <label class="form-label">Organ Type</label>
+            <input type="text" name="organ_type" class="form-control" maxlength="60"
+                   placeholder="e.g. Kidney, Liver"
+                   value="{{ donor['organ_type'] or '' }}" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Contact Number <span class="text-muted">(optional)</span></label>
+            <input type="text" name="contact" class="form-control" maxlength="40"
+                   value="{{ donor['contact'] or '' }}" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+              <option value="active"   {% if donor['status'] == 'active'   %}selected{% endif %}>Active</option>
+              <option value="inactive" {% if donor['status'] == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}DonorShield – Home{% endblock %}
+
+{% block content %}
+<div class="hero-section text-center py-5 mb-4 rounded-3">
+  <i class="bi bi-shield-heart-fill display-1 text-danger"></i>
+  <h1 class="display-5 fw-bold mt-3">DonorShield</h1>
+  <p class="lead text-muted">Secure Blood &amp; Organ Donation Management with Network Threat Detection</p>
+  {% if not user %}
+  <a href="{{ url_for('login') }}" class="btn btn-danger btn-lg mt-2 me-2">
+    <i class="bi bi-box-arrow-in-right me-2"></i>Staff Login
+  </a>
+  <a href="{{ url_for('register') }}" class="btn btn-outline-danger btn-lg mt-2">
+    <i class="bi bi-person-plus me-2"></i>Create Account
+  </a>
+  {% else %}
+  <a href="{{ url_for('dashboard') }}" class="btn btn-danger btn-lg mt-2">
+    <i class="bi bi-speedometer2 me-2"></i>Go to Dashboard
+  </a>
+  {% endif %}
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-6">
+    <div class="card border-0 bg-white shadow-sm text-center py-3">
+      <div class="fs-1 fw-bold text-danger">{{ donor_count }}</div>
+      <div class="text-muted small">Registered Donors</div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card border-0 bg-white shadow-sm text-center py-3">
+      <div class="fs-1 fw-bold text-primary">{{ user_count }}</div>
+      <div class="text-muted small">Staff Accounts</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-4">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body text-center">
+        <i class="bi bi-droplet-half display-5 text-danger mb-3"></i>
+        <h5 class="card-title">Blood Inventory</h5>
+        <p class="card-text text-muted">Track real-time blood unit availability across all blood groups.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body text-center">
+        <i class="bi bi-people-fill display-5 text-primary mb-3"></i>
+        <h5 class="card-title">Donor Registry</h5>
+        <p class="card-text text-muted">Maintain a verified registry of blood and organ donors with full history.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body text-center">
+        <i class="bi bi-journal-text display-5 text-success mb-3"></i>
+        <h5 class="card-title">Security Audit Log</h5>
+        <p class="card-text text-muted">Every login, data change, and system event is recorded for accountability.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

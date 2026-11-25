@@ -1,0 +1,50 @@
+# Virtual environments
+.venv/
+venv/
+
+# SQLite databases
+*.db
+*.sqlite3
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# RSA private key — NEVER commit this
+keys/private.pem
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# pytest
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+donorshield-demo.db*
+
+# Local demo-only HTTPS certificate and private key
+certs/demo-localhost.crt
+certs/demo-localhost.key
+# Network capture files - review and publish separately if sanitized
+*.pcap
+*.pcapng
+
+# Local debugging scripts
+debug_snort*.py
+
+# Generated local audit report artifacts
+/report.json
+/report.sig
+
+# Local logs
+*.log
+logs/
+
+# Local generated uploads
+uploads/

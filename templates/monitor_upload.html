@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Upload PCAP – DonorShield{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+  <a href="{{ url_for('monitor') }}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Back to Network Monitor
+  </a>
+</div>
+
+<h4 class="mb-3"><i class="bi bi-upload me-2"></i>Upload &amp; Analyse PCAP
+  <span class="badge bg-danger ms-2 fs-6">Admin Only</span>
+</h4>
+
+<div class="alert alert-warning py-2 small mb-4">
+  <i class="bi bi-exclamation-triangle me-1"></i>
+  <strong>Offline analysis only.</strong> This tool reads an existing PCAP file — it does
+  not perform live packet capture. Only analyse traffic you own or have explicit written
+  permission to capture. Maximum file size: <strong>50 MB</strong>.
+</div>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <form method="post" action="{{ url_for('monitor_upload') }}" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <div class="mb-3">
+        <label class="form-label fw-semibold">PCAP File</label>
+        <input type="file" name="pcap_file" class="form-control"
+               accept=".pcap,.pcapng,.cap" required />
+        <div class="form-text">Accepted formats: .pcap, .pcapng, .cap — max 50 MB</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Analysis Engine</label>
+        <div class="d-flex gap-3">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="engine" id="engineScapy"
+                   value="scapy" checked />
+            <label class="form-check-label" for="engineScapy">
+              <span class="badge bg-primary me-1">Scapy</span>
+              Built-in rules (SYN scan, flood, repeated connections)
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="engine" id="engineSnort"
+                   value="snort" />
+            <label class="form-check-label" for="engineSnort">
+              <span class="badge bg-warning text-dark me-1">Snort</span>
+              Snort 2.9.20 with DonorShield rules
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="engine" id="engineTshark" value="tshark" />
+            <label class="form-check-label" for="engineTshark"><span class="badge bg-info text-dark me-1">TShark</span>Capture summary</label>
+          </div>
+        </div>
+        <div class="form-text">
+          Snort uses <code>DS_SNORT_PATH</code> or its configured Windows path.
+          TShark uses <code>C:\Program Files\Wireshark\tshark.exe</code>
+          or <code>DS_TSHARK_PATH</code>. TShark shows metadata, not alerts.
+        </div>
+      </div>
+      <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" id="saveAlerts"
+               name="save_alerts" value="1" />
+        <label class="form-check-label" for="saveAlerts">
+          Save Scapy/Snort alerts to the database
+          <span class="text-muted small">(uncheck to preview without saving)</span>
+        </label>
+      </div>
+      <button type="submit" class="btn btn-danger">
+        <i class="bi bi-search me-1"></i>Analyse File
+      </button>
+    </form>
+  </div>
+</div>
+
+{% if result is defined %}
+<div class="card shadow-sm">
+  <div class="card-header fw-semibold d-flex align-items-center gap-2">
+    <i class="bi bi-clipboard-data me-1"></i>Analysis Results — {{ filename }}
+    {% if engine == 'snort' %}<span class="badge bg-warning text-dark">Snort alerts</span>
+    {% elif engine == 'tshark' %}<span class="badge bg-info text-dark">TShark summary</span>
+    {% else %}<span class="badge bg-primary">Scapy detections</span>{% endif %}
+  </div>
+  <div class="card-body">
+    {% if engine == 'tshark' %}
+    <p><strong>Packets analysed:</strong> {{ result['packets_read'] }}{% if result['truncated'] %} (limited to 100,000){% endif %}</p>
+    <div class="row">
+      <div class="col-md-4"><h6>Protocol distribution</h6><ul>{% for x in result['protocols'] %}<li>{{ x['name'] }}: {{ x['count'] }}</li>{% else %}<li>No packets</li>{% endfor %}</ul></div>
+      <div class="col-md-4"><h6>Top sources</h6><ul>{% for x in result['sources'] %}<li>{{ x['ip'] }}: {{ x['count'] }}</li>{% else %}<li>No IP sources</li>{% endfor %}</ul></div>
+      <div class="col-md-4"><h6>Top destinations</h6><ul>{% for x in result['destinations'] %}<li>{{ x['ip'] }}: {{ x['count'] }}</li>{% else %}<li>No IP destinations</li>{% endfor %}</ul></div>
+    </div><p class="small text-muted">Metadata summary only; no payloads or alerts stored.</p>
+    {% elif engine == 'snort' %}
+    <p><strong>Engine:</strong> Snort 2.9.20-WIN64 &nbsp;&nbsp;<strong>Alerts found:</strong> {{ result['alerts'] | length }}</p>
+    {% else %}
+    <p class="mb-2">
+      <strong>Engine:</strong> Scapy &nbsp;&nbsp;
+      <strong>Packets read:</strong> {{ result['packets_read'] }}
+      {% if result['truncated'] %}<span class="badge bg-warning text-dark ms-1">truncated at 100 000</span>{% endif %}
+      &nbsp;&nbsp;
+      <strong>Alerts found:</strong> {{ result['alerts'] | length }}
+    </p>
+    {% endif %}
+
+    {% if engine != 'tshark' and result['alerts'] %}
+    <table class="table table-sm table-hover">
+      <thead class="table-light">
+        <tr><th>Rule</th><th>Severity</th><th>Source IP</th><th>Dest IP</th><th>Port</th><th>Reason</th></tr>
+      </thead>
+      <tbody>
+        {% for a in result['alerts'] %}
+        <tr>
+          <td><span class="badge bg-dark small">{{ a.rule_id }}</span></td>
+          <td>
+            <span class="badge
+              {% if a.severity == 'high' %}bg-danger
+              {% elif a.severity == 'medium' %}bg-warning text-dark
+              {% else %}bg-secondary{% endif %}">
+              {{ a.severity }}
+            </span>
+          </td>
+          <td class="small font-monospace">{{ a.src_ip or '—' }}</td>
+          <td class="small font-monospace">{{ a.dst_ip or '—' }}</td>
+          <td class="small">{{ a.dst_port or '—' }}</td>
+          <td class="small">{{ a.reason }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="text-muted small mt-2">
+      To save these alerts, re-upload the file with "Save alerts" checked.
+    </p>
+    {% elif engine != 'tshark' %}
+    <p class="text-muted">No alerts detected in this file.</p>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

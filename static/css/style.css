@@ -1,0 +1,14 @@
+:root {
+  --ds-primary: #b71c1c;
+}
+
+.bg-ds-primary { background-color: var(--ds-primary) !important; }
+
+.hero-section {
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
+  border: 1px solid #f5c6c6;
+}
+
+body {
+  background-color: #f8f9fa;
+}

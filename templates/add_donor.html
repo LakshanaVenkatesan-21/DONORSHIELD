@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Register Donor – DonorShield{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card shadow">
+      <div class="card-header fw-semibold"><i class="bi bi-person-plus me-2"></i>Register New Donor</div>
+      <div class="card-body p-4">
+        <form method="POST" action="{{ url_for('add_donor') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="full_name" class="form-control" required />
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col">
+              <label class="form-label">Blood Group</label>
+              <select name="blood_group" class="form-select" required>
+                {% for bg in ["A+","A-","B+","B-","AB+","AB-","O+","O-"] %}
+                <option>{{ bg }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col">
+              <label class="form-label">Donation Type</label>
+              <select name="donation_type" class="form-select" id="donationType" required>
+                <option value="blood">Blood</option>
+                <option value="organ">Organ</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-3" id="organRow" style="display:none">
+            <label class="form-label">Organ Type</label>
+            <input type="text" name="organ_type" class="form-control" placeholder="e.g. Kidney, Liver" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Contact Number <span class="text-muted">(optional)</span></label>
+            <input type="text" name="contact" class="form-control" />
+          </div>
+          <button type="submit" class="btn btn-danger w-100">Register Donor</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

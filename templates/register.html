@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Create Account – DonorShield{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-sm-10 col-md-6 col-lg-4">
+    <div class="card shadow mt-4">
+      <div class="card-body p-4">
+        <h5 class="card-title text-center mb-4">
+          <i class="bi bi-person-plus-fill text-danger me-2"></i>Create Account
+        </h5>
+        <form method="POST" action="{{ url_for('register') }}" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" name="username" class="form-control"
+                   value="{{ form.get('username', '') }}" required autofocus
+                   minlength="3" />
+            <div class="form-text">Minimum 3 characters.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Role</label>
+            <select name="role" class="form-select" required>
+              <option value="" disabled {% if not form.get('role') %}selected{% endif %}>Select role…</option>
+              {% for r in allowed_roles %}
+              <option value="{{ r }}" {% if form.get('role') == r %}selected{% endif %}>
+                {{ r | capitalize }}
+              </option>
+              {% endfor %}
+            </select>
+            <div class="form-text">Admin accounts are created by the system administrator.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control"
+                   required minlength="8" />
+            <div class="form-text">Minimum 8 characters.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Confirm Password</label>
+            <input type="password" name="confirm_password" class="form-control" required />
+          </div>
+          <button type="submit" class="btn btn-danger w-100">Create Account</button>
+        </form>
+        <hr />
+        <p class="text-center small mb-0">
+          Already have an account? <a href="{{ url_for('login') }}">Log in</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

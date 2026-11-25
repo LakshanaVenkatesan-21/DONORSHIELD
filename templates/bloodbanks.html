@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Blood Bank Directory – DonorShield{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h4 class="mb-0"><i class="bi bi-hospital me-2"></i>Blood Bank Directory</h4>
+  <span class="badge bg-secondary fs-6">{{ total }} result{{ 's' if total != 1 }}</span>
+</div>
+
+<div class="alert alert-info py-2 small mb-3">
+  <i class="bi bi-info-circle me-1"></i>
+  Data sourced from <strong>blood-banks.csv</strong> (NBTC / eRaktKosh open data).
+  Availability and contact details are <strong>not live</strong> — verify directly with the blood bank before acting on this information.
+</div>
+
+<!-- Search / filter form -->
+<form method="get" class="card shadow-sm mb-4">
+  <div class="card-body">
+    <div class="row g-2">
+      <div class="col-sm-6 col-lg-3">
+        <input type="text" name="name" class="form-control form-control-sm"
+               placeholder="Blood bank name" value="{{ q_name }}">
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <select name="state" class="form-select form-select-sm">
+          <option value="">All States</option>
+          {% for s in states %}
+          <option value="{{ s }}" {% if s == q_state %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-sm-6 col-lg-2">
+        <input type="text" name="district" class="form-control form-control-sm"
+               placeholder="District" value="{{ q_district }}">
+      </div>
+      <div class="col-sm-6 col-lg-2">
+        <input type="text" name="city" class="form-control form-control-sm"
+               placeholder="City" value="{{ q_city }}">
+      </div>
+      <div class="col-sm-6 col-lg-1">
+        <select name="category" class="form-select form-select-sm">
+          <option value="">All Types</option>
+          {% for c in categories %}
+          <option value="{{ c }}" {% if c == q_category %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-sm-6 col-lg-1 d-flex gap-1">
+        <button type="submit" class="btn btn-sm btn-danger w-100">Search</button>
+        <a href="{{ url_for('bloodbanks') }}" class="btn btn-sm btn-outline-secondary">✕</a>
+      </div>
+    </div>
+  </div>
+</form>
+
+<!-- Results table -->
+<div class="card shadow-sm mb-3">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Name</th>
+            <th>State</th>
+            <th>District</th>
+            <th>City</th>
+            <th>Category</th>
+            <th>Component</th>
+            <th>Service</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in banks %}
+          <tr>
+            <td class="fw-semibold">{{ b['name'] }}</td>
+            <td class="small">{{ b['state'] }}</td>
+            <td class="small">{{ b['district'] }}</td>
+            <td class="small">{{ b['city'] }}</td>
+            <td>
+              {% if b['category'] %}
+              <span class="badge
+                {% if b['category'] == 'Government' %}bg-primary
+                {% elif b['category'] == 'Charity' %}bg-success
+                {% else %}bg-secondary{% endif %}">
+                {{ b['category'] }}
+              </span>
+              {% else %}<span class="text-muted small">—</span>{% endif %}
+            </td>
+            <td class="small">
+              {% if b['blood_component'] == 'YES' %}
+              <span class="text-success"><i class="bi bi-check-circle-fill"></i></span>
+              {% elif b['blood_component'] == 'NO' %}
+              <span class="text-danger"><i class="bi bi-x-circle-fill"></i></span>
+              {% else %}<span class="text-muted">—</span>{% endif %}
+            </td>
+            <td class="small text-muted">{{ b['service_time'] or '—' }}</td>
+            <td>
+              <a href="{{ url_for('bloodbank_detail', bank_id=b['id']) }}"
+                 class="btn btn-xs btn-outline-danger btn-sm py-0 px-2">View</a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8" class="text-center text-muted py-4">No blood banks match your search.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<nav>
+  <ul class="pagination pagination-sm justify-content-center flex-wrap">
+    {% set args = {'state': q_state, 'district': q_district, 'city': q_city,
+                   'name': q_name, 'category': q_category} %}
+    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('bloodbanks', page=page-1, **args) }}">‹</a>
+    </li>
+    {% for p in range([1, page-3]|max, [total_pages+1, page+4]|min) %}
+    <li class="page-item {% if p == page %}active{% endif %}">
+      <a class="page-link" href="{{ url_for('bloodbanks', page=p, **args) }}">{{ p }}</a>
+    </li>
+    {% endfor %}
+    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('bloodbanks', page=page+1, **args) }}">›</a>
+    </li>
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

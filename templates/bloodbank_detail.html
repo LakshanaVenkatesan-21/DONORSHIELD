@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}{{ bank['name'] }} – DonorShield{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+  <a href="{{ url_for('bloodbanks') }}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Back to Directory
+  </a>
+</div>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-header d-flex align-items-center gap-2">
+    <i class="bi bi-hospital-fill text-danger fs-5"></i>
+    <span class="fw-bold fs-5">{{ bank['name'] }}</span>
+    {% if bank['category'] %}
+    <span class="badge ms-auto
+      {% if bank['category'] == 'Government' %}bg-primary
+      {% elif bank['category'] == 'Charity' %}bg-success
+      {% else %}bg-secondary{% endif %}">
+      {{ bank['category'] }}
+    </span>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+
+      <div class="col-md-6">
+        <h6 class="text-muted text-uppercase small mb-2">Location</h6>
+        <table class="table table-sm table-borderless mb-0">
+          <tr><th class="text-muted fw-normal" style="width:35%">State</th><td>{{ bank['state'] }}</td></tr>
+          <tr><th class="text-muted fw-normal">District</th><td>{{ bank['district'] }}</td></tr>
+          <tr><th class="text-muted fw-normal">City</th><td>{{ bank['city'] }}</td></tr>
+          {% if bank['address'] %}
+          <tr><th class="text-muted fw-normal">Address</th><td class="small">{{ bank['address'] }}</td></tr>
+          {% endif %}
+          {% if bank['pincode'] %}
+          <tr><th class="text-muted fw-normal">Pincode</th><td>{{ bank['pincode'] }}</td></tr>
+          {% endif %}
+        </table>
+      </div>
+
+      <div class="col-md-6">
+        <h6 class="text-muted text-uppercase small mb-2">Contact</h6>
+        <table class="table table-sm table-borderless mb-0">
+          {% if bank['contact_no'] %}
+          <tr><th class="text-muted fw-normal" style="width:35%">Phone</th><td>{{ bank['contact_no'] }}</td></tr>
+          {% endif %}
+          {% if bank['mobile'] %}
+          <tr><th class="text-muted fw-normal">Mobile</th><td>{{ bank['mobile'] }}</td></tr>
+          {% endif %}
+          {% if bank['helpline'] %}
+          <tr><th class="text-muted fw-normal">Helpline</th><td>{{ bank['helpline'] }}</td></tr>
+          {% endif %}
+          {% if bank['email'] %}
+          <tr><th class="text-muted fw-normal">Email</th>
+              <td><a href="mailto:{{ bank['email'] }}">{{ bank['email'] }}</a></td></tr>
+          {% endif %}
+          {% if bank['website'] %}
+          <tr><th class="text-muted fw-normal">Website</th>
+              <td><a href="{{ bank['website'] }}" target="_blank" rel="noopener">{{ bank['website'] }}</a></td></tr>
+          {% endif %}
+        </table>
+      </div>
+
+      <div class="col-md-6">
+        <h6 class="text-muted text-uppercase small mb-2">Services</h6>
+        <table class="table table-sm table-borderless mb-0">
+          <tr>
+            <th class="text-muted fw-normal" style="width:35%">Blood Component</th>
+            <td>
+              {% if bank['blood_component'] == 'YES' %}
+              <span class="text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>Available</span>
+              {% elif bank['blood_component'] == 'NO' %}
+              <span class="text-danger"><i class="bi bi-x-circle-fill me-1"></i>Not available</span>
+              {% else %}<span class="text-muted">—</span>{% endif %}
+            </td>
+          </tr>
+          <tr>
+            <th class="text-muted fw-normal">Apheresis</th>
+            <td>
+              {% if bank['apheresis'] == 'YES' %}
+              <span class="text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>Yes</span>
+              {% elif bank['apheresis'] == 'NO' %}
+              <span class="text-muted">No</span>
+              {% else %}<span class="text-muted">—</span>{% endif %}
+            </td>
+          </tr>
+          {% if bank['service_time'] %}
+          <tr><th class="text-muted fw-normal">Service Hours</th><td>{{ bank['service_time'] }}</td></tr>
+          {% endif %}
+        </table>
+      </div>
+
+      {% if bank['license_no'] %}
+      <div class="col-md-6">
+        <h6 class="text-muted text-uppercase small mb-2">Licensing</h6>
+        <table class="table table-sm table-borderless mb-0">
+          <tr><th class="text-muted fw-normal" style="width:35%">License #</th><td class="small">{{ bank['license_no'] }}</td></tr>
+        </table>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+  <div class="card-footer text-muted small">
+    <i class="bi bi-database me-1"></i>Source: {{ bank['source'] }} &mdash;
+    Availability is <strong>not live</strong>. Verify directly with the blood bank.
+  </div>
+</div>
+{% endblock %}
